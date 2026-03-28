@@ -10,14 +10,17 @@ from streaming.tracks import Track
 
 
 class Artist:
-    def __init__(self, artist_id, name, genre, tracks : list[Track]):
-        self.tracks = tracks
+    def __init__(self, artist_id, name, genre):
+        self.tracks = []
         self.genre = genre
         self.name = name
         self.artist_id = artist_id
 
     def add_track(self, track):
-        pass
+        self.tracks.append(track)
 
     def track_count(self):
-        pass
+        if self.tracks == []:
+            return 0
+        else:
+            return len(self.tracks)

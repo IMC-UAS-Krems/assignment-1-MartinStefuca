@@ -7,33 +7,39 @@ Classes to implement:
   - Playlist
     - CollaborativePlaylist
 """
-from streaming.tracks import Track
-from streaming.users import User
-
-
 class Playlist:
-    def __init__(self, playlist_id, name, owner, tracks : list[Track]):
-        self.tracks = tracks
+    def __init__(self, playlist_id, name, owner):
+        self.tracks = []
         self.owner = owner
         self.name = name
         self.playlist_id = playlist_id
 
     def add_track(self, track):
-        pass
+        if track not in self.tracks:
+            self.tracks.append(track)
+
 
     def remove_track(self, track_id):
-        pass
+        for i in self.tracks:
+            if i.track_id == track_id:
+                self.tracks.remove(i)
 
     def total_duration_seconds(self):
-        pass
+        total = 0
+        for i in self.tracks:
+            total += i.duration_seconds
+        return total
+
 
 class CollaborativePlaylist(Playlist):
-    def __init__(self, playlist_id, name, owner, tracks, contributors : list[User]):
-        super().__init__(playlist_id, name, owner, tracks)
-        self.contributors = contributors
+    def __init__(self, playlist_id, name, owner):
+        super().__init__(playlist_id, name, owner)
+        self.contributors = [owner]
 
     def add_contributor(self, user):
-        pass
+        if user not in self.contributors:
+            self.contributors.append(user)
 
     def remove_contributor(self, user):
-        pass
+        if user != self.owner:
+            self.contributors.remove(user)

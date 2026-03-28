@@ -10,18 +10,27 @@ from streaming.tracks import AlbumTrack
 
 
 class Album:
-    def __init__(self, album_id, title, artist, release_year, tracks : list[AlbumTrack]):
-        self.tracks = tracks
+    def __init__(self, album_id, title, artist, release_year):
+        self.tracks = []
         self.release_year = release_year
         self.artist = artist
         self.title = title
         self.album_id = album_id
+        self.tra_ids = set()
 
     def add_track(self, track):
-        pass
+        self.tracks.insert(0,track)
+        track.album = self
+        self.tra_ids.add(track.track_id)
 
     def track_ids(self):
-        pass
+        return self.tra_ids
 
     def duration_seconds(self):
-        pass
+        a = 0
+        if self.tracks == []:
+            return 0
+        else:
+            for i in self.tracks:
+                a += i.duration_seconds
+            return a

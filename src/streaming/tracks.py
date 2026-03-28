@@ -21,7 +21,12 @@ class Track:
         self.genre = genre
 
     def duration_minutes(self):
-        pass
+        return self.duration_seconds/60
+    def __eq__(self, other):
+        if isinstance(other, Track) and self.track_id == other.track_id:
+            return True
+        else:
+            return False
 
 class Song(Track):
     def __init__(self, track_id, title, duration_seconds, genre, artist):
@@ -29,9 +34,9 @@ class Song(Track):
         self.artist = artist
 
 class AlbumTrack(Song):
-    def __init__(self, track_id, title, duration_seconds, genre, artist, track_number, album):
+    def __init__(self, track_id, title, duration_seconds, genre, artist, track_number):
         super().__init__(track_id, title, duration_seconds, genre, artist)
-        self.album = album
+        self.album = None
         self.track_number = track_number
 
 class SingleRelease(Song):
@@ -40,19 +45,19 @@ class SingleRelease(Song):
         self.release_date = release_date
 
 class Podcast(Track):
-    def __init__(self, track_id, title, duration_seconds, genre, host, description):
+    def __init__(self, track_id, title, duration_seconds, genre, host, description = ""):
         super().__init__(track_id, title, duration_seconds, genre)
         self.description = description
         self.host = host
 
 class NarrativeEpisode(Podcast):
-    def __init__(self, track_id, title, duration_seconds, genre, host, description, season, episode_number):
+    def __init__(self, track_id, title, duration_seconds, genre, host, season, episode_number, description=""):
         super().__init__(track_id, title, duration_seconds, genre, host, description)
         self.episode_number = episode_number
         self.season = season
 
 class InterviewEpisode(Podcast):
-    def __init__(self, track_id, title, duration_seconds, genre, host, description, guest):
+    def __init__(self, track_id, title, duration_seconds, genre, host, guest, description=""):
         super().__init__(track_id, title, duration_seconds, genre, host, description)
         self.guest = guest
 
