@@ -20,7 +20,7 @@ class Artist:
         self.tracks.append(track)
 
     def track_count(self):
-        if self.tracks == []:
+        if not self.tracks:
             return 0
         else:
             return len(self.tracks)

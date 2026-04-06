@@ -20,7 +20,7 @@ from streaming.tracks import (
 from streaming.users import FreeUser, PremiumUser, FamilyAccountUser, FamilyMember
 from streaming.sessions import ListeningSession
 from streaming.playlists import Playlist, CollaborativePlaylist
-
+from tests.unit_tests.conftest import premium_user
 
 # ---------------------------------------------------------------------------
 # Helper - timestamps relative to the real current time so that the
@@ -40,7 +40,10 @@ def platform() -> StreamingPlatform:
     # Artists
     # ------------------------------------------------------------------
     pixels  = Artist("a1", "Pixels",    genre="pop")
-    platform.add_artist(pixels)
+    david  = Artist("a2", "David",    genre="rock")
+    bruno  = Artist("a3", "Bruno",    genre="pop")
+    for i in (pixels, david, bruno):
+        platform.add_artist(i)
 
     # ------------------------------------------------------------------
     # Albums & AlbumTracks
@@ -55,15 +58,69 @@ def platform() -> StreamingPlatform:
         pixels.add_track(track)
     platform.add_album(dd)
 
+    best_album = Album("alb2", "Yes Best", artist=david, release_year=2023)
+    td1 = AlbumTrack("td1", "Rain", 180, "rock", david, track_number=1)
+    td2 = AlbumTrack("td2", "Horizon", 210, "rock", david, track_number=2)
+    td3 = AlbumTrack("td3", "Fields", 200, "rock", david, track_number=3)
+    for track in (td1, td2, td3):
+        best_album.add_track(track)
+        platform.add_track(track)
+        david.add_track(track)
+    platform.add_album(best_album)
+
 
     # ------------------------------------------------------------------
     # Users
     # ------------------------------------------------------------------
     alice = FreeUser("u1", "Alice",   age=30)
     bob   = PremiumUser("u2", "Bob",   age=25, subscription_start=date(2023, 1, 1))
+    jon   = PremiumUser("u3", "JON",   age=30, subscription_start=date(2024, 1, 1))
+    mom   = FamilyAccountUser("u4", "mother", 40)
+    son   = FamilyMember("u5", "Sonny", 8,mom)
 
-    for user in (alice, bob):
+    for user in (alice, bob, jon,mom,son):
         platform.add_user(user)
+
+    # ------------------------------------------------------------------
+    # Collaborative playlist
+    # ------------------------------------------------------------------
+    col_playlist1 = CollaborativePlaylist("p1", "fav_songs",bob)
+    col_playlist1.add_track(t1)
+    col_playlist1.add_track(t2)
+    col_playlist1.add_track(t3)
+
+    col_playlist2 = CollaborativePlaylist("p2", "best_songs",bob)
+    col_playlist2.add_track(t1)
+    col_playlist2.add_track(t2)
+    col_playlist2.add_track(td3)
+
+    standard_play = Playlist("p3", "Normal", mom)
+    standard_play.add_track(td2)
+    standard_play.add_track(td3)
+
+    standard_play2 = Playlist("p4", "Usual", alice)
+    standard_play2.add_track(td1)
+
+
+    for i in (col_playlist1, col_playlist2, standard_play, standard_play2):
+        platform.add_playlist(i)
+
+    # ------------------------------------------------------------------
+    # Sessions
+    # ------------------------------------------------------------------
+    s1 = ListeningSession("s1", bob, t1, RECENT, 180)
+    s2 = ListeningSession("s2", jon, t1, RECENT, 180)
+    s_3 = ListeningSession("s3", alice, t1, RECENT, 180)
+    s_4 = ListeningSession("s4", alice, t2, RECENT, 180)
+    s_5 = ListeningSession("s5", mom, t2, OLD, 180)
+    s_6 = ListeningSession("s6", son, t2, OLD, 210)
+    s7 = ListeningSession("s7", alice, t3, RECENT, 180)
+
+
+
+
+    for i in (s1, s_3, s2, s_4, s_5, s_6, s7):
+        platform.record_session(i)
 
 
     return platform

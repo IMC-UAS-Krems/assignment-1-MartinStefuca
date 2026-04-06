@@ -17,6 +17,9 @@ class Playlist:
     def add_track(self, track):
         if track not in self.tracks:
             self.tracks.append(track)
+            track.album = self
+        else:
+            return
 
 
     def remove_track(self, track_id):
@@ -39,6 +42,8 @@ class CollaborativePlaylist(Playlist):
     def add_contributor(self, user):
         if user not in self.contributors:
             self.contributors.append(user)
+        else:
+            return
 
     def remove_contributor(self, user):
         if user != self.owner:
