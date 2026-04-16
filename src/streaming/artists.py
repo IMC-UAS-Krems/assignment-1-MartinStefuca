@@ -6,7 +6,6 @@ Implement the Artist class representing musicians and content creators.
 Classes to implement:
   - Artist
 """
-from streaming.tracks import Track
 
 
 class Artist:

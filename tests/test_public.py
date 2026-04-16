@@ -18,12 +18,15 @@ Run with:
 """
 
 import pytest
-from datetime import timedelta
+from datetime import timedelta, date
 
+from streaming.artists import Artist
 from streaming.platform import StreamingPlatform
-from streaming.users import FreeUser, PremiumUser, FamilyAccountUser, FamilyMember
+from streaming.sessions import ListeningSession
+from streaming.tracks import AlbumTrack
+from streaming.users import FreeUser, PremiumUser
 from streaming.playlists import CollaborativePlaylist
-from tests.conftest import FIXED_NOW, RECENT, OLD, fixed_now
+from tests.conftest import FIXED_NOW, RECENT
 
 
 # ===========================================================================
@@ -58,7 +61,7 @@ class TestTotalListeningTime:
         start = RECENT - timedelta(days=3)
         end = FIXED_NOW
         result = platform.total_listening_time_minutes(start, end)
-        assert result == 12
+        assert result == 15.0
 
 
 # ===========================================================================
@@ -89,10 +92,21 @@ class TestAvgUniqueTracksPremium:
     #       average for premium users. You'll need to count unique tracks
     #       per premium user and calculate the average.
     def test_correct_value(self, platform: StreamingPlatform) -> None:
+
+        pixels  = Artist("a1", "Pixels",    genre="pop")
+        kate = PremiumUser("u2", "Bob",   age=25, subscription_start=date(2023, 1, 1))
+        t1 = AlbumTrack("t1", "Pixel Rain", 180, "pop", pixels, track_number=1)
+        s8 = ListeningSession("s1", kate, t1, RECENT, 180)
+        platform.record_session(s8)
+        platform.record_session(s8)
+
+        expected = 1
         result = platform.avg_unique_tracks_per_premium_user(days=30)
-        expected = 1/2
         assert result == pytest.approx(expected)
 
+    def  test_zero_days_selected(self, platform: StreamingPlatform) -> None:
+        result = platform.avg_unique_tracks_per_premium_user(days=0)
+        assert result == 0.0
 
 # ===========================================================================
 # Q3 - Track with the most distinct listeners
@@ -149,8 +163,10 @@ class TestAvgSessionDurationByType:
     # TODO: Add tests to verify all user types are present and have correct averages.
     def test_all_user_types_present(self, platform: StreamingPlatform) -> None:
         result = platform.avg_session_duration_by_user_type()
-        assert result == [('FreeUser',360.0),('FamilyAccountUser',195.0),('PremiumUser',180.0)]
-
+        assert result ==   [('FamilyMember', 210.0),
+                            ('PremiumUser', 180.0),
+                            ('FreeUser', 180.0),
+                            ('FamilyAccountUser', 180.0)]
 # ===========================================================================
 # Q5 - Total listening time for underage sub-users
 # ===========================================================================
@@ -178,10 +194,10 @@ class TestUnderageSubUserListening:
     # TODO: Add tests for correct values with default and custom thresholds.
     def test_correct_value_default_threshold(self, platform: StreamingPlatform) -> None:
         result = platform.total_listening_time_underage_sub_users_minutes()
-        assert result == 0.0
+        assert result == 3.5
 
     def test_custom_threshold(self, platform: StreamingPlatform) -> None:
-        result = platform.total_listening_time_underage_sub_users_minutes(9)
+        result = platform.total_listening_time_underage_sub_users_minutes(26)
         assert result == 3.5
 
 
@@ -222,8 +238,11 @@ class TestTopArtistsByListeningTime:
     # TODO: Add a test that verifies the correct artists and values.
     def test_top_artist(self, platform: StreamingPlatform) -> None:
         result = platform.top_artists_by_listening_time(n=3)
-        assert result == [(platform.get_artist("a1"),18.5),(platform.get_artist("a2"),0.0),(platform.get_artist("a3"),0.0)]
+        assert result == [(platform.get_artist("a1"),21.5),(platform.get_artist("a2"),0.0),(platform.get_artist("a3"),0.0)]
 
+    def test_top_artist_less_artists_than_asked_for(self, platform: StreamingPlatform) -> None:
+        result = platform.top_artists_by_listening_time(n=5)
+        assert result == [(platform.get_artist("a1"),21.5),(platform.get_artist("a2"),0.0),(platform.get_artist("a3"),0.0)]
 
 # ===========================================================================
 # Q7 - User's top genre and percentage

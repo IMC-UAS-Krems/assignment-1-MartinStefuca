@@ -9,14 +9,10 @@ Classes to implement:
 """
 from datetime import timedelta, datetime
 
-from requests import session
-
-from streaming.albums import Album
 from streaming.artists import Artist
-from streaming.playlists import Playlist, CollaborativePlaylist
-from streaming.sessions import ListeningSession
-from streaming.tracks import Track, Song, AlbumTrack
-from streaming.users import User, PremiumUser, FreeUser, FamilyMember, FamilyAccountUser
+from streaming.playlists import CollaborativePlaylist
+from streaming.tracks import Song, AlbumTrack, Track
+from streaming.users import PremiumUser, FreeUser, FamilyMember, FamilyAccountUser
 
 
 class StreamingPlatform:
@@ -66,85 +62,117 @@ class StreamingPlatform:
         return list(self._catalogue.values())
 
 
-# Q1
-    def total_listening_time_minutes(self,start,end):
+    # Q1
+    def total_listening_time_minutes(self,start,end) -> float:
+        """Calculates the total listening time of all users"""
+
         total_listening = 0
         for ses in self._sessions:
             if start <= ses.timestamp <= end:
                 total_listening += ses.duration_listened_seconds
 
-        return total_listening/60
+        return float(total_listening/60)
 
-# Q2
-    def avg_unique_tracks_per_premium_user(self, days=0):
+    # Q2
+    def avg_unique_tracks_per_premium_user(self,  days=30) -> float:
+        """Calculates distinct tracks per PremiumUser in the last n days.
+           - Sums the number of unique tracks of every PremiumUser.
+           - Divides it by the total number of PremiumUsers.
+        """
+
         time = datetime.now().replace(microsecond=0) - timedelta(days=days)
-        all_unique_set = set()
         premium_user_count = 0
+        number_of_tracks = 0
+        dic_users_their_u_tracks = {}
         for i in self._sessions:
-            if i.timestamp > time and isinstance(i.user, PremiumUser):
-                all_unique_set.add(i.track.track_id)
+            if i.timestamp > time and isinstance(i.user, PremiumUser):   # for each premium user we get
+                u_id = i.user.user_id                                    # user_id : {set of their unique tracks}
+                if u_id not in dic_users_their_u_tracks:
+                    dic_users_their_u_tracks[u_id] = set()
+                dic_users_their_u_tracks[u_id].add(i.track.track_id)
         for i in self.all_users():
-            if isinstance(i, PremiumUser):
+            if isinstance(i, PremiumUser):                 # total number of premium user
                 premium_user_count += 1
+        for tracks in dic_users_their_u_tracks.values():   # this part calculates the total number
+            number_of_tracks += len(tracks)                #  of unique tracks per user
         if premium_user_count != 0:
-            result = len(all_unique_set)/premium_user_count
+            result = number_of_tracks/premium_user_count
             return result
-        elif days == 0:
-            return 0.0
         else:
-            return 0.0
+            return 0.0  # if the number of days selected is 0 or there is 0 PremiumUsers
 
-# Q3
-    def track_with_most_distinct_listeners(self):
+    # Q3
+    def track_with_most_distinct_listeners(self) -> Track | None:
+        """Return the track with the highest number of distinct listeners (not total plays).
+            - Count the number of unique users who have listened to each track.
+            - Return the one with the most.
+            - Return None if no sessions exist.
+        """
+
+        if not self._sessions:  # no sessions
+            return None
         track_unique_users = {}
         for i in self._sessions:
             if i.track.track_id not in track_unique_users:
-                track_unique_users.update({i.track.track_id:[]})
-            else:
-                if i.user not in track_unique_users[i.track.track_id]:
-                    track_unique_users[i.track.track_id].append(i.user)
-        if track_unique_users == {}:
-            return None
+                track_unique_users.update({i.track.track_id:set()})   # for each track we create ->
+            track_unique_users[i.track.track_id].add(i.user.user_id)  # {track_id : {set of unique user_ids}}
+
         return self.get_track(max(track_unique_users, key=lambda x: len(x[1])))
 
     # Q4
-    def avg_session_duration_by_user_type(self):
-        # counts per user type
-        d = {
-            "PremiumUser":0,
-             "FreeUser":0,
-             "FamilyAccountUser":0
-            }
-        for i in self._users.values():
-            if isinstance(i, PremiumUser):
-                d["PremiumUser"] += 1
-            elif isinstance(i, FreeUser):
-                d["FreeUser"] += 1
-            else:
-                d["FamilyAccountUser"] += 1
-        time_per_type = {
-            "PremiumUser": 0,
-            "FreeUser": 0,
-            "FamilyAccountUser": 0
+    def avg_session_duration_by_user_type(self) -> list[tuple[str, float]]:
+        """Calculates average session duration (in seconds) for each user type.
+        - Return a list of (type_name, average_duration) tuples.
+        - Sort results from longest to shortest duration.
+        """
+
+        di = {
+            "PremiumUser":0,    # counts per user type
+            "FreeUser":0,
+            "FamilyAccountUser":0,
+            "FamilyMember":0,
+                                # total time per user type
+            "PremiumUser_time": 0,
+            "FreeUser_time": 0,
+            "FamilyAccountUser_time": 0,
+            "FamilyMember_time": 0,
         }
         for i in self._sessions:
-            if isinstance(i.user, PremiumUser):
-                time_per_type["PremiumUser"] += i.duration_listened_seconds
-            elif isinstance(i.user, FreeUser):
-                time_per_type["FreeUser"] += i.duration_listened_seconds
+            user = i.user
+            if isinstance(user, PremiumUser):
+                di["PremiumUser"] += 1
+                di["PremiumUser_time"] += i.duration_listened_seconds
+            elif isinstance(user, FreeUser):
+                di["FreeUser"] += 1
+                di["FreeUser_time"] += i.duration_listened_seconds
+            elif isinstance(user, FamilyAccountUser):
+                di["FamilyAccountUser"] += 1
+                di["FamilyAccountUser_time"] += i.duration_listened_seconds
             else:
-                time_per_type["FamilyAccountUser"] += i.duration_listened_seconds
+                di["FamilyMember"] += 1
+                di["FamilyMember_time"] += i.duration_listened_seconds
+        a = 0
+        if di["PremiumUser"] != 0:                  # avoiding ZeroDivisioError
+            a = di["PremiumUser_time"]/di["PremiumUser"]
+        b = 0
+        if di["FreeUser"] != 0:
+            b = di["FreeUser_time"]/di["FreeUser"]
+        c = 0
+        if di["FamilyAccountUser"] != 0:
+            c = di["FamilyAccountUser_time"]/di["FamilyAccountUser"]
+        d = 0
+        if di["FamilyMember"] != 0:
+            d = di["FamilyMember_time"]/di["FamilyMember"]
 
-            a = time_per_type["PremiumUser"]/d["PremiumUser"]
-            b = time_per_type["FreeUser"]/d["FreeUser"]
-            c = time_per_type["FamilyAccountUser"]/d["FamilyAccountUser"]
+        return sorted([("PremiumUser",a),("FreeUser",b),("FamilyAccountUser",c),("FamilyMember",d)],key= lambda x: x[1], reverse=True)
 
-
-        return sorted([("PremiumUser",a),("FreeUser",b),("FamilyAccountUser",c)],key= lambda x: x[1], reverse=True)
-
-# Q5
-    def total_listening_time_underage_sub_users_minutes(self, age_threshold=0):
-        if age_threshold == 0:
+    # Q5
+    def total_listening_time_underage_sub_users_minutes(self, age_threshold: int = 18) -> float:
+        """Sums the total listening time (minutes) of FamilyMember users under the age threshold.
+        - Default threshold = 18.
+        - Returns 0.0 if no underage users or their sessions exist.
+        """
+        if age_threshold == 0:   # not necessary, but no need to iterate if the threshold is 0
             return 0.0
         total = 0.0
         for i in self._sessions:
@@ -152,8 +180,12 @@ class StreamingPlatform:
                 total += i.duration_listened_seconds/60
         return total
 
-# Q6
-    def top_artists_by_listening_time(self, n):
+    # Q6
+    def top_artists_by_listening_time(self, n: int = 5) -> list[tuple[Artist, float]]:
+        """Returns ordered list of N tuples in the form (Artist, total_listening_time)
+        from highest to lowest.
+        - Only counting Song tracks
+        """
         artist_listening_min = {}
         for i in self._artists.values():
             artist_listening_min.update({i.artist_id:0.0})
@@ -162,11 +194,13 @@ class StreamingPlatform:
                 artist_listening_min[i.track.artist.artist_id] += i.duration_listened_seconds /60
         result = []
         for i,j in artist_listening_min.items():
-            result.append((self.get_artist(i),j))
+            result.append((self.get_artist(i),j))  # result -> [(Artist, listened_minutes), ...]
+        if len(result) < n:
+            print("There is not enough artists on the platform!")
+            return list(sorted(result,key= lambda x: x[1], reverse=True))
+        return list(sorted(result,key= lambda x: x[1], reverse=True))[:n]
 
-        a = sorted(result,key= lambda x: x[1], reverse=True)[:n]
-        return a
-# Q7
+    # Q7
     def user_top_genre(self, user_id):
         if user_id not in self._users:
             return None
@@ -180,7 +214,7 @@ class StreamingPlatform:
         top_genre = max(user_genres_time, key= lambda x: x[1])
         return top_genre[0], top_genre[1] / total_listening *100
 
-# Q8
+    # Q8
     def collaborative_playlists_with_many_artists(self, threshold=0):
         result = []
         actual_result = []
@@ -196,7 +230,7 @@ class StreamingPlatform:
 
         return actual_result
 
-# Q9
+    # Q9
     def avg_tracks_per_playlist_type(self):
         calculation = []
         for i in self._playlists.values():
@@ -230,7 +264,7 @@ class StreamingPlatform:
         }
         return result_dict
 
-# Q10 Not working yet
+    # Q10 Not working yet
     def users_who_completed_albums(self):
         result = []
         d = {}

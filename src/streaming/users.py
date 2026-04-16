@@ -10,7 +10,6 @@ Classes to implement:
     - FamilyAccountUser
     - FamilyMember
 """
-from streaming.sessions import ListeningSession
 
 
 class User:
@@ -53,7 +52,6 @@ class FreeUser(User):
 class FamilyMember(User):
     def __init__(self, user_id, name, age, parent):
         super().__init__(user_id, name, age)
-        # parent is FamilyAccountUseer
         self.parent = parent
 
 class FamilyAccountUser(User):

@@ -21,11 +21,11 @@ class Playlist:
         else:
             return
 
-
     def remove_track(self, track_id):
         for i in self.tracks:
             if i.track_id == track_id:
                 self.tracks.remove(i)
+                break
 
     def total_duration_seconds(self):
         total = 0

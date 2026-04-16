@@ -10,17 +10,10 @@ from datetime import date, datetime, timedelta
 from streaming.platform import StreamingPlatform
 from streaming.artists import Artist
 from streaming.albums import Album
-from streaming.tracks import (
-    AlbumTrack,
-    SingleRelease,
-    InterviewEpisode,
-    NarrativeEpisode,
-    AudiobookTrack,
-)
+from streaming.tracks import AlbumTrack
 from streaming.users import FreeUser, PremiumUser, FamilyAccountUser, FamilyMember
 from streaming.sessions import ListeningSession
 from streaming.playlists import Playlist, CollaborativePlaylist
-from tests.unit_tests.conftest import premium_user
 
 # ---------------------------------------------------------------------------
 # Helper - timestamps relative to the real current time so that the
@@ -108,13 +101,13 @@ def platform() -> StreamingPlatform:
     # ------------------------------------------------------------------
     # Sessions
     # ------------------------------------------------------------------
-    s1 = ListeningSession("s1", bob, t1, RECENT, 180)
-    s2 = ListeningSession("s2", jon, t1, RECENT, 180)
-    s_3 = ListeningSession("s3", alice, t1, RECENT, 180)
-    s_4 = ListeningSession("s4", alice, t2, RECENT, 180)
-    s_5 = ListeningSession("s5", mom, t2, OLD, 180)
-    s_6 = ListeningSession("s6", son, t2, OLD, 210)
-    s7 = ListeningSession("s7", alice, t3, RECENT, 180)
+    s1 = ListeningSession("s1", bob, t1, RECENT, 180) # premium
+    s2 = ListeningSession("s2", jon, t1, RECENT, 180) # premium
+    s_3 = ListeningSession("s3", alice, t1, RECENT, 180) #free
+    s_4 = ListeningSession("s4", alice, t2, RECENT, 180) #free
+    s_5 = ListeningSession("s5", mom, t2, OLD, 180) #FamilyAccount
+    s_6 = ListeningSession("s6", son, t2, OLD, 210) #FamilyMember
+    s7 = ListeningSession("s7", alice, t3, RECENT, 180) #free
 
 
 
