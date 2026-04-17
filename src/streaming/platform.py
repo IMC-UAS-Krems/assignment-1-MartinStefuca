@@ -201,29 +201,48 @@ class StreamingPlatform:
         return list(sorted(result,key= lambda x: x[1], reverse=True))[:n]
 
     # Q7
-    def user_top_genre(self, user_id):
+    def user_top_genre(self, user_id) -> tuple[str, float] | None:
+        """For a specific user, returns a tuple in the form (genre_name, percentage_of_total_time)
+        - Returns None if user doesn't exist or has no sessions
+        """
         if user_id not in self._users:
             return None
         user_genres_time = []
-        for i in self._sessions:
-            if i.user.user_id == user_id:
+        for i in self._sessions:            # list of (genre, listening_time) tuples
+            if i.user.user_id == user_id:   # for each listening session
                 user_genres_time.append((i.track.genre, i.duration_listened_seconds))
-        total_listening = 0
+        if not user_genres_time:  # no session -> None
+            return None
+
+        total_listening = 0    #total listening across all genres
+        genre_time = {}
         for i in user_genres_time:
             total_listening += i[1]
-        top_genre = max(user_genres_time, key= lambda x: x[1])
-        return top_genre[0], top_genre[1] / total_listening *100
+            if i[0] not in genre_time:
+                genre_time[i[0]] = 0
+            genre_time[i[0]] += i[1]
+
+        top_genre = max(genre_time, key= lambda x: x[1])
+
+        return top_genre, genre_time[top_genre] / total_listening * 100
 
     # Q8
-    def collaborative_playlists_with_many_artists(self, threshold=0):
+    def collaborative_playlists_with_many_artists(self, threshold: int = 3) -> list[CollaborativePlaylist]:
+        """Return all CollaborativePlaylist instances with more distinct artists than the threshold
+        - Only counts Song tracks
+        - Returns playlists in registration order
+        - Returns [] when there is no CollaborativePlaylist with more distinct artists than the threshold
+        """
         result = []
+        for playlist in self._playlists.values():
+            if isinstance(playlist,CollaborativePlaylist):
+                artist_unique = set()
+                for track in playlist.tracks: # for every playlist there is a set of unique artists
+                    if isinstance(track, Song):
+                        artist_unique.add(track.artist.artist_id)
+                result.append((playlist,len(artist_unique)))
+             # result is a list of tuples in the form (playlist, n_unique_artists)
         actual_result = []
-        for i in self._playlists.values():
-            artist_unique = set()
-            for track in i.tracks:
-                if isinstance(track, Song):
-                    artist_unique.add(track.artist.artist_id)
-            result.append((i,len(artist_unique)))
         for i in result:
             if i[1] > threshold:
                 actual_result.append(i[0])
@@ -232,17 +251,24 @@ class StreamingPlatform:
 
     # Q9
     def avg_tracks_per_playlist_type(self):
+        """Computes the average number of tracks per playlist,
+        distinguishing between standard Playlist and CollaborativePlaylist instances.
+        - Returns a dictionary with keys "Playlist" and "CollaborativePlaylist"
+        mapped to their respective averages.
+        - Returns 0.0 for a type with no instances.
+        """
         calculation = []
         for i in self._playlists.values():
             if type(i) == CollaborativePlaylist:
-                calculation.append(("CollaborationPlaylist",len(i.tracks)))
+                calculation.append(("CollaborativePlaylist",len(i.tracks)))
             else:
                 calculation.append(("Playlist",len(i.tracks)))
 
-        playlist_count = 0
-        collab_count = 0
-        play_track_count = 0
-        collab_track_count = 0
+        playlist_count = 0     # number of playlists
+        collab_count = 0       #
+
+        play_track_count = 0   # number of tracks per playlist
+        collab_track_count = 0 #
         for i in calculation:
             if i[0] == "Playlist":
                 playlist_count += 1
@@ -250,50 +276,32 @@ class StreamingPlatform:
             else:
                 collab_count += 1
                 collab_track_count += i[1]
+
+        average_for_playlist = 0.0
         if playlist_count != 0:
-            a = play_track_count / playlist_count
-        else:
-            a = 0.0
+            average_for_playlist = play_track_count / playlist_count
+        average_for_collab_p = 0.0
         if collab_count != 0:
-            b = collab_track_count / collab_count
-        else:
-            b = 0.0
+            average_for_collab_p = collab_track_count / collab_count
+
         result_dict = {
-            "Playlist": a,
-            "CollaborativePlaylist": b
+            "Playlist": average_for_playlist,
+            "CollaborativePlaylist": average_for_collab_p
         }
         return result_dict
 
     # Q10 Not working yet
     def users_who_completed_albums(self):
-        result = []
-        d = {}
-        albums_set_dic = {}
-        for i in self._sessions:
-            a = set()
-            if isinstance(i.track, AlbumTrack):
-                if i.user.user_id not in d:
-                    d.update({i.user.user_id:set()})
-                else:
-                    d[i.user.user_id].add(i.track.title)
-                for j in i.track.album.tracks:
-                    a.add(j.title)
-            if i.user.user_id not in albums_set_dic:
-                albums_set_dic.update({i.user.user_id: []})
-            else:
-                albums_set_dic[i.user.user_id].append(i.track.title)
-        for i in d.keys():
-            for j in albums_set_dic.keys():
-                if i == j:
-                    for k in albums_set_dic[j]:
-                        if d[i].union(k) == d[i]:
-                            for l in range(len(result)):
-                                if range(len(result)) == 0:
-                                    result.append((self.get_user(i), [k[0].album.title]))
-                                elif result[l][0] != i:
-                                    result.append((self.get_user(i),[k[0].album.title]))
-                                else:
-                                    result[l][1].append(k[0].album.title)
+        """Returns users who have listened to every track on at least one album
+        - Returns (User, [album_titles]) tuples (with all completed albums listed)
+        - Ignores albums with no tracks
+        """
+        # we need [{user : [{playlist : set{tracks of the playlist that the user has listened to}}]}]
+        main_list = []
+        for session in self._sessions:
+            if session.user not in main_list:
+                main_list.append( {session.user:[] } )
+            if isinstance(session.track, AlbumTrack):
+                main_list[session.user].append({session.track.album:set()})
 
-        return result
 

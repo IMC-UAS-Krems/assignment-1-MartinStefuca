@@ -26,10 +26,9 @@ class Album:
         return {track.track_id for track in self.tracks}
 
     def duration_seconds(self):
-        a = 0
-        if self.tracks == []:
+        if not self.tracks:
             return 0
-        else:
-            for i in self.tracks:
-                a += i.duration_seconds
-            return a
+        a = 0
+        for i in self.tracks:
+            a += i.duration_seconds
+        return a

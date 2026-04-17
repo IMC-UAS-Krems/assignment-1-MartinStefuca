@@ -33,7 +33,7 @@ def platform() -> StreamingPlatform:
     # Artists
     # ------------------------------------------------------------------
     pixels  = Artist("a1", "Pixels",    genre="pop")
-    david  = Artist("a2", "David",    genre="rock")
+    david  = Artist("a2", "David",    genre="pop")
     bruno  = Artist("a3", "Bruno",    genre="pop")
     for i in (pixels, david, bruno):
         platform.add_artist(i)
@@ -43,8 +43,8 @@ def platform() -> StreamingPlatform:
     # ------------------------------------------------------------------
     dd = Album("alb1", "Digital Dreams", artist=pixels, release_year=2022)
     t1 = AlbumTrack("t1", "Pixel Rain",      180, "pop",  pixels, track_number=1)
-    t2 = AlbumTrack("t2", "Grid Horizon",    210, "pop",  pixels, track_number=2)
-    t3 = AlbumTrack("t3", "Vector Fields",   195, "pop",  pixels, track_number=3)
+    t2 = AlbumTrack("t2", "Grid Horizon",    210, "rock",  pixels, track_number=2)
+    t3 = AlbumTrack("t3", "Vector Fields",   195, "jazz",  pixels, track_number=3)
     for track in (t1, t2, t3):
         dd.add_track(track)
         platform.add_track(track)

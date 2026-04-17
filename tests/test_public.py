@@ -278,8 +278,18 @@ class TestUserTopGenre:
 
     # TODO: Add a test that verifies the correct genre and percentage for a known user.
     def test_correct_top_genre(self, platform: StreamingPlatform) -> None:
-        result = platform.user_top_genre("u5")
-        assert result == ("pop",100.0)
+        result = platform.user_top_genre("u1")
+
+        assert result == ("pop",1/3 * 100)
+
+    def test_correct_top_genre2(self, platform: StreamingPlatform) -> None:
+        pixels = Artist("a1", "Pixels", genre="pop")
+        bob = PremiumUser("u2", "Bob", age=25, subscription_start=date(2023, 1, 1))
+        t8 = AlbumTrack("t8", "Pix", 180, "rock", pixels, track_number=1)
+        s8 = ListeningSession("s8", bob, t8, RECENT, 120)
+        platform.record_session(s8)
+        result = platform.user_top_genre("u2")
+        assert result == ("pop",180/300*100)
 
 
 # ===========================================================================
@@ -344,12 +354,11 @@ class TestAvgTracksPerPlaylistType:
     # TODO: Add tests that verify the correct averages for each playlist type.
     def test_standard_playlist_average(self, platform: StreamingPlatform) -> None:
         result = platform.avg_tracks_per_playlist_type()
-        assert result == {"Playlist":3/2 ,"CollaborativePlaylist":3 }
+        assert result["Playlist"] == 3/2
 
-    def test_collaborative_playlist_average(
-        self, platform: StreamingPlatform
-    ) -> None:
-        pass
+    def test_collaborative_playlist_average(self, platform: StreamingPlatform) -> None:
+        result = platform.avg_tracks_per_playlist_type()
+        assert result["CollaborativePlaylist"] == 3
 
 
 # ===========================================================================
