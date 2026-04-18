@@ -393,7 +393,9 @@ class TestUsersWhoCompletedAlbums:
     # TODO: Add tests that verify the correct users and albums are identified.
     def test_correct_users_identified(self, platform: StreamingPlatform) -> None:
         result = platform.users_who_completed_albums()
-        assert result == [(platform.get_user("u1"),["Digital Dreams"])]
+        assert result[0][0] == platform.get_user("u1")
 
     def test_correct_album_titles(self, platform: StreamingPlatform) -> None:
-        pass
+        result = platform.users_who_completed_albums()
+        assert result[0][1] == ["Digital Dreams"]
+

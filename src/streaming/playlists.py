@@ -17,7 +17,6 @@ class Playlist:
     def add_track(self, track):
         if track not in self.tracks:
             self.tracks.append(track)
-            track.album = self
         else:
             return
 

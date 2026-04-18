@@ -101,13 +101,13 @@ def platform() -> StreamingPlatform:
     # ------------------------------------------------------------------
     # Sessions
     # ------------------------------------------------------------------
-    s1 = ListeningSession("s1", bob, t1, RECENT, 180) # premium
-    s2 = ListeningSession("s2", jon, t1, RECENT, 180) # premium
-    s_3 = ListeningSession("s3", alice, t1, RECENT, 180) #free
-    s_4 = ListeningSession("s4", alice, t2, RECENT, 180) #free
-    s_5 = ListeningSession("s5", mom, t2, OLD, 180) #FamilyAccount
-    s_6 = ListeningSession("s6", son, t2, OLD, 210) #FamilyMember
-    s7 = ListeningSession("s7", alice, t3, RECENT, 180) #free
+    s1 = ListeningSession("s1", bob, t1, RECENT, 180) # premium u2
+    s2 = ListeningSession("s2", jon, t1, RECENT, 180) # premium u3
+    s_3 = ListeningSession("s3", alice, t1, RECENT, 180) #free u1
+    s_4 = ListeningSession("s4", alice, t2, RECENT, 180) #free u1
+    s_5 = ListeningSession("s5", mom, t2, OLD, 180) #FamilyAccount u4
+    s_6 = ListeningSession("s6", son, t2, OLD, 210) #FamilyMember u5
+    s7 = ListeningSession("s7", alice, t3, RECENT, 180) #free u1
 
 
 

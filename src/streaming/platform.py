@@ -290,18 +290,50 @@ class StreamingPlatform:
         }
         return result_dict
 
-    # Q10 Not working yet
+    # Q10
     def users_who_completed_albums(self):
         """Returns users who have listened to every track on at least one album
         - Returns (User, [album_titles]) tuples (with all completed albums listed)
         - Ignores albums with no tracks
         """
-        # we need [{user : [{playlist : set{tracks of the playlist that the user has listened to}}]}]
-        main_list = []
+        # we need {user : {playlist : set{tracks of the playlist that the user has listened to}}}
+        main_list = {} # something like: {'u2': [{'alb1': {'t1'}}], 'u1': [{'alb1': {'t1', 't3', 't2'}}], 'u3': [{'alb1': {'t1'}}], 'u4': [{'alb1': {'t2'}}], 'u5': [{'alb1': {'t2'}}]}
         for session in self._sessions:
-            if session.user not in main_list:
-                main_list.append( {session.user:[] } )
             if isinstance(session.track, AlbumTrack):
-                main_list[session.user].append({session.track.album:set()})
+                userID = session.user.user_id
+                albumID = session.track.album.album_id
+                trackID = session.track.track_id
 
+                if userID not in main_list:
+                    main_list.update( {userID:[] } )
+                is_album_there = False
+                for album_tracks in main_list[userID]:
+                    if album_tracks[albumID]:
+                        is_album_there = True
+                        album_tracks[albumID].add(trackID)
+                if not is_album_there:
+                    main_list[userID].append({albumID:{trackID}})
 
+        # let's create a list containing (album_id, number of tracks) tuples for every album
+        album_tracks_n = [] #afterwards looks like: [('alb1', 3), ('alb2', 3)]
+        for album in self._albums.values():
+            album_tracks_n.append((album.album_id,len(album.tracks)))
+
+        result = [] # becomes [('u1', {'alb1': {'t1', 't3', 't2'}})]
+        for user, albums in main_list.items():
+            for album in albums:
+                for i in album_tracks_n:
+                    if album.get(i[0]) and len (album[i[0]]) == i[1] and i[1] > 0:
+                        result.append((user,album))
+
+        result_dict = {} # {'u1': ['Digital Dreams']}
+        for user_tuple in result:
+            if user_tuple[0] not in result_dict: #user not in result_dict
+                result_dict[user_tuple[0]] = []
+            for album in user_tuple[1]:
+                result_dict[user_tuple[0]].append(self.get_album(album).title)
+        return_form = []
+        for user, albums in result_dict.items():
+            return_form.append((self.get_user(user),albums))
+
+        return return_form
