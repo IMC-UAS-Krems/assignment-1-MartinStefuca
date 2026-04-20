@@ -9,20 +9,22 @@ Classes to implement:
 """
 from datetime import timedelta, datetime
 
+from streaming.albums import Album
 from streaming.artists import Artist
-from streaming.playlists import CollaborativePlaylist
+from streaming.playlists import CollaborativePlaylist, Playlist
+from streaming.sessions import ListeningSession
 from streaming.tracks import Song, AlbumTrack, Track
-from streaming.users import PremiumUser, FreeUser, FamilyMember, FamilyAccountUser
+from streaming.users import PremiumUser, FreeUser, FamilyMember, FamilyAccountUser, User
 
 
 class StreamingPlatform:
-    def __init__(self, name):
-        self._catalogue = {} #dict[str, Track]
-        self._users = {} #dict[str, User]
-        self._artists = {} #dict[str, Artist]
-        self._albums = {} #dict[str, Album]
-        self._playlists = {} #dict[str, Playlist]
-        self._sessions = [] #list[ListeningSession]
+    def __init__(self, name: str):
+        self._catalogue: dict[str, Track] = {}
+        self._users: dict[str, User] = {}
+        self._artists: dict[str, Artist] = {}
+        self._albums: dict[str, Album] = {}
+        self._playlists: dict[str, Playlist] = {}
+        self._sessions: list[ListeningSession] = []
         self.name = name
 
     def add_track(self, track):
@@ -250,7 +252,7 @@ class StreamingPlatform:
         return actual_result
 
     # Q9
-    def avg_tracks_per_playlist_type(self):
+    def avg_tracks_per_playlist_type(self) -> dict[str, float]:
         """Computes the average number of tracks per playlist,
         distinguishing between standard Playlist and CollaborativePlaylist instances.
         - Returns a dictionary with keys "Playlist" and "CollaborativePlaylist"
@@ -291,7 +293,7 @@ class StreamingPlatform:
         return result_dict
 
     # Q10
-    def users_who_completed_albums(self):
+    def users_who_completed_albums(self) -> list[tuple[User, list[str]]]:
         """Returns users who have listened to every track on at least one album
         - Returns (User, [album_titles]) tuples (with all completed albums listed)
         - Ignores albums with no tracks

@@ -6,11 +6,13 @@ Implement the Album class for collections of AlbumTrack objects.
 Classes to implement:
   - Album
 """
+from streaming.artists import Artist
+from streaming.tracks import AlbumTrack
 
 
 class Album:
-    def __init__(self, album_id, title, artist, release_year):
-        self.tracks = []
+    def __init__(self, album_id: str, title: str, artist: Artist, release_year: int):
+        self.tracks: list[AlbumTrack] = []
         self.release_year = release_year
         self.artist = artist
         self.title = title
@@ -22,10 +24,10 @@ class Album:
         track.album = self
         self.tracks = sorted(self.tracks, key=lambda x: x.track_number)
 
-    def track_ids(self):
+    def track_ids(self) -> set[str]:
         return {track.track_id for track in self.tracks}
 
-    def duration_seconds(self):
+    def duration_seconds(self) -> int:
         if not self.tracks:
             return 0
         a = 0

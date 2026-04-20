@@ -7,9 +7,13 @@ Classes to implement:
   - Playlist
     - CollaborativePlaylist
 """
+from streaming.tracks import Track
+from streaming.users import User
+
+
 class Playlist:
-    def __init__(self, playlist_id, name, owner):
-        self.tracks = []
+    def __init__(self, playlist_id: str, name:str, owner: User):
+        self.tracks: list[Track] = []
         self.owner = owner
         self.name = name
         self.playlist_id = playlist_id
@@ -26,7 +30,7 @@ class Playlist:
                 self.tracks.remove(i)
                 break
 
-    def total_duration_seconds(self):
+    def total_duration_seconds(self) -> int:
         total = 0
         for i in self.tracks:
             total += i.duration_seconds
@@ -36,7 +40,7 @@ class Playlist:
 class CollaborativePlaylist(Playlist):
     def __init__(self, playlist_id, name, owner):
         super().__init__(playlist_id, name, owner)
-        self.contributors = [owner]
+        self.contributors: list[User] = [owner]
 
     def add_contributor(self, user):
         if user not in self.contributors:

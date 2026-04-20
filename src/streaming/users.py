@@ -10,11 +10,14 @@ Classes to implement:
     - FamilyAccountUser
     - FamilyMember
 """
+from datetime import date
+
+from streaming.sessions import ListeningSession
 
 
 class User:
-    def __init__(self, user_id, name, age):
-        self.sessions = []
+    def __init__(self, user_id: str, name: str, age: int):
+        self.sessions: list[ListeningSession] = []
         self.user_id = user_id
         self.name = name
         self.age = age
@@ -24,7 +27,7 @@ class User:
         self.sessions.append(session)
         self.unique_tracks.add(session.track.track_id)
     
-    def total_listening_seconds(self):
+    def total_listening_seconds(self) -> int:
         if len(self.sessions) == 0:
             return 0
         else:
@@ -33,36 +36,36 @@ class User:
                 a +=i.duration_listened_seconds
             return a
     
-    def total_listening_minutes(self):
+    def total_listening_minutes(self) -> float:
         return self.total_listening_seconds()/60
     
-    def unique_tracks_listened(self):
+    def unique_tracks_listened(self) -> set[str]:
         return self.unique_tracks
         
 class PremiumUser(User):
     def __init__(self, user_id, name, age, subscription_start):
         super().__init__(user_id, name, age)
-        self.subscription_start = subscription_start
+        self.subscription_start: date = subscription_start
 
 class FreeUser(User):
     def __init__(self, user_id, name, age):
         super().__init__(user_id, name, age)
-        self.MAX_SKIPS_PER_HOUR = 6
+        self.MAX_SKIPS_PER_HOUR: int = 6
 
 class FamilyMember(User):
     def __init__(self, user_id, name, age, parent):
         super().__init__(user_id, name, age)
-        self.parent = parent
+        self.parent: FamilyAccountUser = parent
 
 class FamilyAccountUser(User):
     def __init__(self, user_id, name, age):
         super().__init__(user_id, name, age)
-        self.sub_users = []
+        self.sub_users: list[FamilyMember] = []
 
     def add_sub_user(self, sub_user):
         self.sub_users.append(sub_user)
 
-    def all_members(self):
+    def all_members(self) -> list[User]:
         self.sub_users.insert(0,self)
         return self.sub_users
 
