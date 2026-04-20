@@ -13,10 +13,11 @@ Classes to implement:
       - NarrativeEpisode
     - AudiobookTrack
 """
+from abc import ABC
 from datetime import date
 
 
-class Track:
+class Track(ABC):
     def __init__(self, track_id: str, title: str, duration_seconds: int, genre: str):
         self.track_id = track_id
         self.title = title
